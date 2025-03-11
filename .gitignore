@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# .envrc file
+.envrc
+
 # input files
 input
 

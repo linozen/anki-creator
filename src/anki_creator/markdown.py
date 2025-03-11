@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 from textwrap import dedent
 
 from markitdown import MarkItDown
 import mdformat
 from openai import OpenAI
+
+logger = logging.getLogger(__name__)
 
 
 def parse_file_to_md(file_path: Path) -> str:
@@ -30,6 +33,7 @@ def format_markdown_llm(
     Returns:
         Preprocessed markdown content with proper structure and formatting
     """
+    logger.debug(f"Formatting markdown content (language: {language})")
 
     system_prompt = dedent(
         """You are a markdown formatting specialist. Follow these instructions
@@ -76,20 +80,25 @@ def format_markdown_llm(
         """
     )
 
-    response = client.chat.completions.create(
-        model="gpt-4",  # or gpt-3.5-turbo if preferred
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.3,  # Lower temperature for more consistent formatting
-    )
-
-    result = response.choices[0].message.content
-    if result:
-        return result
-    else:
-        return "No response from the model."
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",  # or gpt-3.5-turbo if preferred
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.3,  # Lower temperature for more consistent formatting
+        )
+        result = response.choices[0].message.content
+        if result:
+            logger.debug("Markdown content formatted successfully.")
+            return result
+        else:
+            logger.warning("No response from the model for markdown formatting.")
+            return "No response from the model."
+    except Exception as e:
+        logger.error(f"Error formatting markdown content: {e}")
+        raise
 
 
 def get_markdown_from_file(
@@ -97,14 +106,28 @@ def get_markdown_from_file(
     client: OpenAI,
 ) -> tuple[str, str]:
     """Generate markdown content in the specified format."""
-    unformatted = parse_file_to_md(file_path)
+    logger.debug(f"Processing file: {file_path}")
 
-    # Format markdown content with mdformat
-    formatted = format_markdown_mdformat(unformatted)
-    llm_formatted = format_markdown_llm(formatted, client)
-    content = format_markdown_mdformat(llm_formatted)
+    try:
+        unformatted = parse_file_to_md(file_path)
+        logger.debug("Successfully parsed file to markdown")
 
-    # Get title from first line of markdown content
-    title = content.split("\n")[0].strip("# ")
+        # Format markdown content with mdformat
+        formatted = format_markdown_mdformat(unformatted)
+        logger.debug("Markdown content formatted with mdformat")
+
+        llm_formatted = format_markdown_llm(formatted, client)
+        logger.debug("Markdown content formatted with LLM")
+
+        content = format_markdown_mdformat(llm_formatted)
+        logger.debug("Final markdown content formatted with mdformat")
+
+        # Get title from first line of markdown content
+        title = content.split("\n")[0].strip("# ")
+        logger.info(f"Title extracted: {title}")
+
+    except Exception as e:
+        logger.error(f"Error processing file: {e}")
+        raise
 
     return content, title

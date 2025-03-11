@@ -1,4 +1,5 @@
 import random
+from textwrap import dedent
 
 import genanki
 
@@ -6,7 +7,7 @@ from .cards import Cards, ClozeCard, BasicCard
 
 # Create models for different card types
 BASIC_MODEL = genanki.Model(
-    random.randrange(1 << 30, 1 << 31),
+    2077470994,
     "Basic with Examples (genanki)",
     fields=[
         {"name": "Question", "font": "Arial"},
@@ -29,11 +30,18 @@ BASIC_MODEL = genanki.Model(
             """,
         },
     ],
-    css=".card {font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n",
+    css=dedent("""
+    .card {
+        font-size: 20px;
+        text-align: center;
+        color: black;
+        background-color: white;
+    }
+    """),
 )
 
 CLOZE_MODEL = genanki.Model(
-    random.randrange(1 << 30, 1 << 31),
+    1337252809,
     "Cloze with Examples (genanki)",
     fields=[
         {"name": "Text", "font": "Arial"},  # Main text with cloze deletions
@@ -58,8 +66,21 @@ CLOZE_MODEL = genanki.Model(
             """,
         }
     ],
-    css=".card {font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n"
-    ".cloze {font-weight: bold;\n color: blue;\n}\n.nightMode .cloze {\ncolor: lightblue;\n}",
+    css=dedent("""
+    .card {
+        font-size: 20px;
+        text-align: center;
+        color: black;
+        background-color: white;
+    }
+    .cloze {
+        font-weight: bold;
+        color: blue;
+    }
+    .nightMode .cloze {
+        color: lightblue;
+    }
+    """),
     model_type=genanki.Model.CLOZE,
 )
 
@@ -80,7 +101,7 @@ def create_deck(title: str, cards: Cards) -> genanki.Deck:
         if type(card) is ClozeCard:
             note = genanki.Note(
                 model=CLOZE_MODEL,
-                fields=[card.text, card.back_extra, examples_html],
+                fields=[card.text, card.back_extra or "", examples_html],
             )
         elif type(card) is BasicCard:
             note = genanki.Note(
