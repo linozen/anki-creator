@@ -10,4 +10,7 @@ wheels/
 .venv
 
 # input files
-input/
+input
+
+# Mac OS
+.DS_Store
